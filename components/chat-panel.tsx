@@ -42,8 +42,9 @@ export function ChatPanel({
     },
     {
       heading: 'what is the overall',
-      subheading: 'service and inventory performance',
-      message: 'What is the overall service and inventory performance?'
+      subheading: 'service and inventory performance for $Construction?',
+      message:
+        'What is the overall service and inventory performance for $Construction?'
     },
     {
       heading: 'I would like to buy',

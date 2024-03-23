@@ -33,4 +33,9 @@ const Events = dynamic(() => import('./events').then(mod => mod.Events), {
   loading: () => <EventsSkeleton />
 })
 
+const OverallPerf = dynamic(() => import('./overall-perf').then(mod => mod.OverallPerf), {
+  ssr: false,
+  loading: () => <EventsSkeleton />
+})
+
 export { Stock, Purchase, Stocks, Events }

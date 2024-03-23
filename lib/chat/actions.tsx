@@ -156,11 +156,11 @@ async function submitUserMessage(content: string) {
         Messages inside [] means that it's a UI element or a user event. For example:
         - "[SKU performance for SKU-1234]" means that an interface of the SKU performance for the SKU-1234 is shown to the user.
 
-        If the user requests overall performance of service and inventory, call \`showOverallPerformance\` to show the purchase UI.
-        If the user just wants the price, call \`showStockPrice\` to show the price.
-        If you want to show trending stocks, call \`list_stocks\`.
+        If the user requests overall performance of service and inventory, call \`showOverallPerformance\` to show the product group e.g. Construction/Paint/Gardening..
+        If the user wants the last week performance comparison, call \`showLastWeek\` to show the performance compared to last week.
+        If you want to show backorder trends and KPIs, call \`showBackOrders\` to show backorder related charts and KPIs with insights.
         If you want to show events, call \`get_events\`.
-        If the user wants to sell stock, or complete another impossible task, respond that you are a demo and cannot do that.
+        
 
         Besides that, you can also chat with users and do some calculations if needed.`
       },
@@ -244,7 +244,7 @@ async function submitUserMessage(content: string) {
           productGroup: z
             .string()
             .describe(
-              'The name of product group . e.g. Construction/Paint/Gardening.'
+              'The name of product group e.g. Construction/Paint/Gardening.'
             )
         }),
         render: async function* ({ productGroup }) {
