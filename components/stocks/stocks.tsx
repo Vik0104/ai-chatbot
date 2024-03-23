@@ -16,6 +16,7 @@ export function Stocks({ props: stocks }: { props: Stock[] }) {
 
   return (
     <div>
+      
       <div className="mb-4 flex flex-col gap-2 overflow-y-scroll pb-4 text-sm sm:flex-row">
         {stocks.map(stock => (
           <button

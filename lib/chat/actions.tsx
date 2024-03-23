@@ -25,6 +25,7 @@ import { Events } from '@/components/stocks/events'
 import { StocksSkeleton } from '@/components/stocks/stocks-skeleton'
 import { Stocks } from '@/components/stocks/stocks'
 import { StockSkeleton } from '@/components/stocks/stock-skeleton'
+import { OverallPerf } from '@/components/stocks/overall-perf'
 import {
   formatNumber,
   runAsyncFnWithoutBlocking,
@@ -120,7 +121,7 @@ async function confirmPurchase(symbol: string, price: number, amount: number) {
     }
   }
 }
-
+// updated prompt - changed show_stock_price to showStockPrice - Original - If the user just wants the price, call \`show_stock_price\` to show the price.
 async function submitUserMessage(content: string) {
   'use server'
 
@@ -149,18 +150,19 @@ async function submitUserMessage(content: string) {
       {
         role: 'system',
         content: `\
-You are a menu suggestion bot for Gateway Subs in New york City.
-Messages inside [] means that it's a UI element or a user event. For example:
-- "[Price of AAPL = 100]" means that an interface of the stock price of AAPL is shown to the user.
-- "[User has changed the amount of AAPL to 10]" means that the user has changed the amount of AAPL to 10 in the UI.
+        You are a supply chain conversation bot for a large home improvement store company. You can help users with insights on their supply chain, step by step.
+        You and the user can discuss the supply chain such as overall inventory and service performance, what is the change in performance sice last week
+        what are the backorders within product families and sku what is the service performance for an SKU, and the user can ask for insights or help with their supply chain, in the UI.
+        Messages inside [] means that it's a UI element or a user event. For example:
+        - "[SKU performance for SKU-1234]" means that an interface of the SKU performance for the SKU-1234 is shown to the user.
 
-If the user requests purchasing a stock, call \`show_stock_purchase_ui\` to show the purchase UI.
-If the user just wants the price, call \`show_stock_price\` to show the price.
-If you want to show trending stocks, call \`list_stocks\`.
-If you want to show events, call \`get_events\`.
-If the user wants to sell stock, or complete another impossible task, respond that you are a demo and cannot do that.
+        If the user requests overall performance of service and inventory, call \`showOverallPerformance\` to show the purchase UI.
+        If the user just wants the price, call \`showStockPrice\` to show the price.
+        If you want to show trending stocks, call \`list_stocks\`.
+        If you want to show events, call \`get_events\`.
+        If the user wants to sell stock, or complete another impossible task, respond that you are a demo and cannot do that.
 
-Besides that, you can also chat with users and do some calculations if needed.`
+        Besides that, you can also chat with users and do some calculations if needed.`
       },
       ...aiState.get().messages.map((message: any) => ({
         role: message.role,
@@ -195,7 +197,8 @@ Besides that, you can also chat with users and do some calculations if needed.`
     },
     functions: {
       listStocks: {
-        description: 'List three imaginary stocks that are trending.',
+        description:
+          'List three imaginary stocks that are trending that are not DOGE, SHIB and SAFEMOON.',
         parameters: z.object({
           stocks: z.array(
             z.object({
@@ -234,19 +237,17 @@ Besides that, you can also chat with users and do some calculations if needed.`
           )
         }
       },
-      showStockPrice: {
+      showOverallPerformance: {
         description:
-          'Get the current stock price of a given stock or currency. Use this to show the price to the user.',
+          'Display Backorder performance, OTIF performance and Inventory performance for the week',
         parameters: z.object({
-          symbol: z
+          productGroup: z
             .string()
             .describe(
-              'The name or symbol of the stock or currency. e.g. DOGE/AAPL/USD.'
-            ),
-          price: z.number().describe('The price of the stock.'),
-          delta: z.number().describe('The change in price of the stock')
+              'The name of product group . e.g. Construction/Paint/Gardening.'
+            )
         }),
-        render: async function* ({ symbol, price, delta }) {
+        render: async function* ({ productGroup }) {
           yield (
             <BotCard>
               <StockSkeleton />
@@ -262,15 +263,16 @@ Besides that, you can also chat with users and do some calculations if needed.`
               {
                 id: nanoid(),
                 role: 'function',
-                name: 'showStockPrice',
-                content: JSON.stringify({ symbol, price, delta })
+                name: 'showOverallPerformance',
+                content: JSON.stringify(productGroup)
               }
             ]
           })
 
           return (
             <BotCard>
-              <Stock props={{ symbol, price, delta }} />
+              {/* <Stock props={{ symbol, price, delta }} /> */}
+              <OverallPerf props={{ productGroup }} />
             </BotCard>
           )
         }
@@ -381,6 +383,37 @@ Besides that, you can also chat with users and do some calculations if needed.`
             </BotCard>
           )
         }
+      },
+      addNumbers: {
+        description: 'Add a list of numbers provided by the user.',
+        parameters: z.object({
+          numbers: z.array(z.number()).describe('The list of numbers to add')
+        }),
+        render: async function* ({ numbers }) {
+          // Calculate the sum of the numbers
+          const sum = numbers.reduce((acc, current) => acc + current, 0)
+
+          // Update the AI state with the result
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'function',
+                name: 'addNumbers',
+                content: `The sum of the provided numbers is ${sum}.`
+              }
+            ]
+          })
+
+          // Return a message displaying the sum
+          return (
+            <BotMessage
+              content={`The sum of the provided numbers is ${sum}.`}
+            />
+          )
+        }
       }
     }
   })
@@ -471,9 +504,9 @@ export const getUIStateFromAIState = (aiState: Chat) => {
             <BotCard>
               <Stocks props={JSON.parse(message.content)} />
             </BotCard>
-          ) : message.name === 'showStockPrice' ? (
+          ) : message.name === 'showOverallPerformance' ? (
             <BotCard>
-              <Stock props={JSON.parse(message.content)} />
+              <OverallPerf props={JSON.parse(message.content)} />
             </BotCard>
           ) : message.name === 'showStockPurchase' ? (
             <BotCard>
